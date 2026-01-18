@@ -1,0 +1,7 @@
+{
+  "name": "Admin Mecanico",
+  "description": "A high-performance automotive workshop management system with real-time tracking, station-based updates, and integrated client communication.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
