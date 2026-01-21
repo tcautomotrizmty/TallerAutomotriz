@@ -252,6 +252,19 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm("¿Está seguro de eliminar esta orden? Esta acción no se puede deshacer.")) return;
+    try {
+      await deleteDoc(doc(db, "jobs", jobId));
+      setActiveJob(null);
+      setView('STAFF_DASHBOARD');
+      showSuccess("ORDEN ELIMINADA");
+    } catch (e) { 
+      console.error(e);
+      alert("Error al eliminar. Verifique conexión."); 
+    }
+  };
+
   const exportHistoryCSV = () => {
     const historical = jobs.filter(j => j.overallStatus === RepairStatus.READY);
     if (!historical.length) return alert("No hay historial disponible.");
@@ -302,14 +315,14 @@ const App: React.FC = () => {
         {view === 'STAFF_DASHBOARD' && <StaffDashboard jobs={jobs.filter(j => j.overallStatus !== RepairStatus.READY)} workshop={workshop} onAdd={() => setView('RECEPTION')} onJob={(j:any) => { setActiveJob(j); setView('STATION_SCAN'); }} />}
         {view === 'ADMIN_HISTORY' && <AdminHistoryView jobs={jobs.filter(j => j.overallStatus === RepairStatus.READY)} workshop={workshop} onExport={exportHistoryCSV} onJob={(j:any) => { setActiveJob(j); setView('STATION_SCAN'); }} />}
         {view === 'RECEPTION' && <ReceptionView catalog={services} onCancel={() => setView('STAFF_DASHBOARD')} workshop={workshop} />}
-        {view === 'STATION_SCAN' && activeJob && <JobUpdateView job={activeJob} catalog={services} staff={users.filter(u => u.role !== UserRole.CLIENT)} onUpdate={handleUpdateJob} profile={profile} onBack={() => setView(profile?.role === UserRole.CLIENT ? 'CLIENT_TRACK' : 'STAFF_DASHBOARD')} onPrint={() => setView('INVOICE_PRINT')} workshop={workshop} />}
+        {view === 'STATION_SCAN' && activeJob && <JobUpdateView job={activeJob} catalog={services} staff={users.filter(u => u.role !== UserRole.CLIENT)} onUpdate={handleUpdateJob} onDelete={handleDeleteJob} profile={profile} onBack={() => setView(profile?.role === UserRole.CLIENT ? 'CLIENT_TRACK' : 'STAFF_DASHBOARD')} onPrint={() => setView('INVOICE_PRINT')} workshop={workshop} />}
         {view === 'ADMIN_PANEL' && <AdminControlCenter users={users} services={services} workshop={workshop} showSuccess={showSuccess} />}
         {view === 'CLIENT_TRACK' && <ClientTrackingView setActiveJob={(j: any) => { setActiveJob(j); setView('STATION_SCAN'); }} workshop={workshop} profile={profile} />}
       </main>
 
       {/* Footer con versión */}
       <footer className="text-center py-4 border-t border-slate-200">
-        <p className="text-[10px] text-slate-400 font-mono">v1.4.0</p>
+        <p className="text-[10px] text-slate-400 font-mono">v1.5.0</p>
       </footer>
     </div>
   );
@@ -615,12 +628,14 @@ const AdminHistoryView = ({ jobs, onExport, onJob }: any) => {
   );
 };
 
-const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, workshop }: any) => {
+const JobUpdateView = ({ job, catalog, onUpdate, onDelete, profile, onBack, onPrint, workshop }: any) => {
   const [localJob, setLocalJob] = useState<VehicleJob>(job);
   const [showAddService, setShowAddService] = useState(false);
+  const [showEditInfo, setShowEditInfo] = useState(false);
   const [customService, setCustomService] = useState({ name: '', price: '', type: 'SERVICE' as 'SERVICE' | 'PART' });
   const isReadOnly = profile.role === UserRole.CLIENT;
   const canEdit = profile.role === UserRole.ADMIN || profile.role === UserRole.STAFF;
+  const isAdmin = profile.role === UserRole.ADMIN;
 
   useEffect(() => { 
     if (job) setLocalJob(job); 
@@ -711,6 +726,16 @@ const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, works
       <div className="flex justify-between items-center">
         <button onClick={onBack} className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase flex items-center gap-2 hover:text-slate-800 transition-colors"><ChevronLeft className="w-4 h-4" /> Volver</button>
         <div className="flex gap-2">
+          {canEdit && (
+            <button onClick={() => setShowEditInfo(!showEditInfo)} className={`p-3 border-2 rounded-xl md:rounded-2xl transition-all ${showEditInfo ? 'bg-amber-100 border-amber-300 text-amber-700' : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'}`} title="Editar datos">
+              <Edit2 className="w-5 h-5" />
+            </button>
+          )}
+          {isAdmin && (
+            <button onClick={() => onDelete(localJob.id)} className="p-3 bg-red-50 border-2 border-red-200 rounded-xl md:rounded-2xl text-red-600 hover:bg-red-100 hover:border-red-300 transition-all" title="Eliminar orden">
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
           <button onClick={onPrint} className="p-3 bg-slate-100 border-2 border-slate-200 rounded-xl md:rounded-2xl text-slate-700 hover:bg-slate-200 transition-all"><Printer className="w-5 h-5" /></button>
           {!isReadOnly && <button onClick={save} className="bg-green-600 px-6 py-3 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs text-white uppercase shadow-lg hover:bg-green-500 hover:shadow-xl transition-all">Guardar</button>}
         </div>
@@ -718,17 +743,65 @@ const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, works
 
       <div className="bg-white border-2 border-slate-100 p-6 md:p-10 rounded-[30px] md:rounded-[40px] space-y-8 shadow-lg">
         {/* Folio con botón de copiar */}
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={copyFolio}
-            className="flex items-center gap-2 bg-blue-50 border-2 border-blue-200 px-4 py-2 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all"
-            title="Copiar folio"
-          >
-            <span className="text-sm md:text-lg font-mono font-black text-blue-600">{localJob.id}</span>
-            {folioCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-blue-500" />}
-          </button>
-          {folioCopied && <span className="text-[10px] font-bold text-green-600 animate-in fade-in">¡Copiado!</span>}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={copyFolio}
+              className="flex items-center gap-2 bg-blue-50 border-2 border-blue-200 px-4 py-2 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all"
+              title="Copiar folio"
+            >
+              <span className="text-sm md:text-lg font-mono font-black text-blue-600">{localJob.id}</span>
+              {folioCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-blue-500" />}
+            </button>
+            {folioCopied && <span className="text-[10px] font-bold text-green-600 animate-in fade-in">¡Copiado!</span>}
+          </div>
+          <span className="text-[9px] text-slate-400 font-mono">{new Date(localJob.createdAt).toLocaleDateString()}</span>
         </div>
+
+        {/* Panel de edición de datos */}
+        {showEditInfo && canEdit && (
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 md:p-6 space-y-4 animate-in slide-in-from-top-4">
+            <div className="flex justify-between items-center">
+              <h4 className="text-[10px] font-black text-amber-700 uppercase flex items-center gap-2"><Edit2 className="w-4 h-4" /> Editar Datos de la Orden</h4>
+              <button onClick={() => setShowEditInfo(false)} className="text-amber-600 hover:text-amber-800"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[8px] font-bold text-amber-700 uppercase block mb-1 px-1">Nombre del Cliente</label>
+                <input 
+                  className="w-full bg-white border-2 border-amber-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-amber-400" 
+                  value={localJob.clientName} 
+                  onChange={e => setLocalJob(prev => ({ ...prev, clientName: e.target.value }))} 
+                />
+              </div>
+              <div>
+                <label className="text-[8px] font-bold text-amber-700 uppercase block mb-1 px-1">Teléfono</label>
+                <input 
+                  className="w-full bg-white border-2 border-amber-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-amber-400" 
+                  value={localJob.clientPhone || ''} 
+                  onChange={e => setLocalJob(prev => ({ ...prev, clientPhone: e.target.value }))} 
+                />
+              </div>
+              <div>
+                <label className="text-[8px] font-bold text-amber-700 uppercase block mb-1 px-1">Marca / Modelo</label>
+                <input 
+                  className="w-full bg-white border-2 border-amber-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-amber-400" 
+                  value={localJob.carModel} 
+                  onChange={e => setLocalJob(prev => ({ ...prev, carModel: e.target.value }))} 
+                />
+              </div>
+              <div>
+                <label className="text-[8px] font-bold text-amber-700 uppercase block mb-1 px-1">Placa</label>
+                <input 
+                  className="w-full bg-white border-2 border-amber-200 rounded-xl px-4 py-3 text-slate-800 text-xs font-mono uppercase outline-none focus:border-amber-400" 
+                  value={localJob.plate} 
+                  onChange={e => setLocalJob(prev => ({ ...prev, plate: e.target.value.toUpperCase() }))} 
+                />
+              </div>
+            </div>
+            <p className="text-[8px] text-amber-600 italic">* No olvide presionar "Guardar" para aplicar los cambios</p>
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
           <div className="max-w-full overflow-hidden">
@@ -1415,7 +1488,7 @@ const LoginView = ({ workshop }: { workshop: WorkshopSettings }) => {
           </button>
         </form>
         <button onClick={() => setIsLogin(!isLogin)} className="w-full mt-8 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">{isLogin ? '¿No tiene cuenta? Regístrese' : '¿Ya tiene cuenta? Acceda aquí'}</button>
-        <p className="text-center mt-6 text-[10px] text-slate-400 font-mono">v1.3.0</p>
+        <p className="text-center mt-6 text-[10px] text-slate-400 font-mono">v1.5.0</p>
       </div>
     </div>
   );
