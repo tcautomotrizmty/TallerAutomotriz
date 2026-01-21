@@ -522,9 +522,12 @@ const AdminHistoryView = ({ jobs, onExport, onJob }: any) => (
   </div>
 );
 
-const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: any) => {
+const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, workshop }: any) => {
   const [localJob, setLocalJob] = useState<VehicleJob>(job);
+  const [showAddService, setShowAddService] = useState(false);
+  const [customService, setCustomService] = useState({ name: '', price: '', type: 'SERVICE' as 'SERVICE' | 'PART' });
   const isReadOnly = profile.role === UserRole.CLIENT;
+  const canEdit = profile.role === UserRole.ADMIN || profile.role === UserRole.STAFF;
 
   useEffect(() => { 
     if (job) setLocalJob(job); 
@@ -552,7 +555,56 @@ const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: an
     }));
   };
 
+  const addServiceFromCatalog = (service: any) => {
+    const newItem: JobItem = {
+      id: Math.random().toString(36).substr(2, 5),
+      name: service.name,
+      price: service.price,
+      type: service.type || 'SERVICE',
+      status: ItemStatus.PENDING,
+      isCustom: false
+    };
+    setLocalJob(prev => ({
+      ...prev,
+      items: [...(prev.items || []), newItem],
+      totalBudget: (prev.totalBudget || 0) + newItem.price
+    }));
+  };
+
+  const addCustomService = () => {
+    if (!customService.name || !customService.price) return;
+    const newItem: JobItem = {
+      id: Math.random().toString(36).substr(2, 5),
+      name: customService.name.toUpperCase(),
+      price: Number(customService.price),
+      type: customService.type,
+      status: ItemStatus.PENDING,
+      isCustom: true
+    };
+    setLocalJob(prev => ({
+      ...prev,
+      items: [...(prev.items || []), newItem],
+      totalBudget: (prev.totalBudget || 0) + newItem.price
+    }));
+    setCustomService({ name: '', price: '', type: 'SERVICE' });
+  };
+
+  const removeItem = (itemId: string) => {
+    const item = localJob.items?.find(i => i.id === itemId);
+    if (!item) return;
+    setLocalJob(prev => ({
+      ...prev,
+      items: (prev.items || []).filter(i => i.id !== itemId),
+      totalBudget: (prev.totalBudget || 0) - (item.price || 0)
+    }));
+  };
+
   const save = () => onUpdate(localJob);
+
+  // Calcular progreso para el cliente
+  const totalItems = localJob.items?.length || 0;
+  const completedItems = localJob.items?.filter(i => i.status === ItemStatus.COMPLETED).length || 0;
+  const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-6 duration-500">
@@ -583,10 +635,82 @@ const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: an
           )}
         </div>
 
+        {/* Barra de progreso para el cliente */}
+        {isReadOnly && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 md:p-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] font-black text-blue-700 uppercase">Progreso del Servicio</span>
+              <span className="text-sm font-black text-blue-700">{progressPercent}%</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-3">
+              <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+            <p className="text-[9px] text-blue-600 mt-2 font-bold">{completedItems} de {totalItems} servicios completados</p>
+          </div>
+        )}
+
         <div className="space-y-4 pt-8 border-t border-slate-200">
-          <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[4px]">Servicios y Refacciones</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[4px]">Servicios y Refacciones</h3>
+            {canEdit && (
+              <button onClick={() => setShowAddService(!showAddService)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-blue-500 transition-all">
+                <Plus className="w-4 h-4" /> Agregar
+              </button>
+            )}
+          </div>
+
+          {/* Panel para agregar servicios */}
+          {showAddService && canEdit && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 md:p-6 space-y-4">
+              <h4 className="text-[10px] font-black text-blue-700 uppercase">Agregar Servicio</h4>
+              
+              {/* Servicios del catálogo */}
+              <div className="space-y-2 max-h-32 overflow-y-auto no-scrollbar">
+                <p className="text-[8px] font-bold text-slate-600 uppercase">Del Catálogo:</p>
+                <div className="flex flex-wrap gap-2">
+                  {(catalog || []).map((s: any) => (
+                    <button key={s.id} onClick={() => addServiceFromCatalog(s)} className="bg-white border-2 border-slate-200 px-3 py-2 rounded-lg text-[9px] font-bold text-slate-700 hover:border-blue-500 hover:bg-blue-50 transition-all">
+                      {s.name} - ${s.price}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Servicio personalizado */}
+              <div className="border-t border-blue-200 pt-4 space-y-3">
+                <p className="text-[8px] font-bold text-slate-600 uppercase">Servicio Personalizado:</p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <input 
+                    className="md:col-span-2 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-blue-500 placeholder:text-slate-400" 
+                    placeholder="Ej: Trapo rojo extra" 
+                    value={customService.name} 
+                    onChange={e => setCustomService({...customService, name: e.target.value})} 
+                  />
+                  <input 
+                    type="number"
+                    className="bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-blue-500 placeholder:text-slate-400" 
+                    placeholder="Precio" 
+                    value={customService.price} 
+                    onChange={e => setCustomService({...customService, price: e.target.value})} 
+                  />
+                  <select 
+                    className="bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-blue-500"
+                    value={customService.type}
+                    onChange={e => setCustomService({...customService, type: e.target.value as 'SERVICE' | 'PART'})}
+                  >
+                    <option value="SERVICE">Servicio</option>
+                    <option value="PART">Refacción</option>
+                  </select>
+                </div>
+                <button onClick={addCustomService} className="bg-green-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-green-500 transition-all flex items-center gap-2">
+                  <PlusCircle className="w-4 h-4" /> Agregar Personalizado
+                </button>
+              </div>
+            </div>
+          )}
+
           {(localJob.items || []).map(item => (
-            <div key={item.id} className="p-5 md:p-8 bg-slate-50 rounded-2xl md:rounded-3xl border-2 border-slate-100 space-y-6 hover:border-slate-200 transition-all shadow-sm">
+            <div key={item.id} className={`p-5 md:p-8 bg-slate-50 rounded-2xl md:rounded-3xl border-2 ${item.isCustom ? 'border-amber-200' : 'border-slate-100'} space-y-6 hover:border-slate-200 transition-all shadow-sm`}>
               <div className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-4 flex-1">
                   {!isReadOnly && (
@@ -594,12 +718,27 @@ const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: an
                       {item.status === ItemStatus.COMPLETED ? <CheckSquare className="w-5 h-5" /> : <SquareIcon className="w-5 h-5" />}
                     </button>
                   )}
+                  {isReadOnly && (
+                    <div className={`p-2 rounded-lg ${item.status === ItemStatus.COMPLETED ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                      {item.status === ItemStatus.COMPLETED ? <CheckSquare className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+                    </div>
+                  )}
                   <div className="overflow-hidden">
-                    <h4 className={`text-xs md:text-base font-black uppercase transition-colors ${item.status === ItemStatus.COMPLETED ? 'text-green-600' : 'text-slate-800'}`}>{item.name}</h4>
-                    <p className="text-[8px] font-bold text-slate-500 uppercase">{ITEM_STATUS_LABELS[item.status]}</p>
+                    <div className="flex items-center gap-2">
+                      <h4 className={`text-xs md:text-base font-black uppercase transition-colors ${item.status === ItemStatus.COMPLETED ? 'text-green-600' : 'text-slate-800'}`}>{item.name}</h4>
+                      {item.isCustom && <span className="text-[7px] bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full font-bold">PERSONALIZADO</span>}
+                    </div>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase">{ITEM_STATUS_LABELS[item.status]} • {item.type === 'PART' ? 'Refacción' : 'Servicio'}</p>
                   </div>
                 </div>
-                <span className="font-mono text-xs md:text-base font-black text-blue-600">${(item.price || 0).toLocaleString()}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs md:text-base font-black text-blue-600">${(item.price || 0).toLocaleString()}</span>
+                  {canEdit && (
+                    <button onClick={() => removeItem(item.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex gap-4 md:gap-10 justify-around md:justify-start">
                 <ImageUploader label="ESTADO INICIAL" currentImage={item.beforePhoto} onUpload={d => updateItemPhoto(item.id, 'beforePhoto', d)} isReadOnly={isReadOnly} />
@@ -607,6 +746,14 @@ const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: an
               </div>
             </div>
           ))}
+
+          {/* Total actualizado */}
+          <div className="flex justify-end pt-4 border-t border-slate-200">
+            <div className="text-right">
+              <p className="text-[9px] font-bold text-slate-500 uppercase">Total</p>
+              <p className="text-2xl font-black font-mono text-slate-800">${(localJob.totalBudget || 0).toLocaleString()}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -616,19 +763,51 @@ const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: an
 const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
   const [form, setForm] = useState({ clientName: '', clientPhone: '', carModel: '', plate: '' });
   const [selected, setSelected] = useState<string[]>([]);
+  const [customItems, setCustomItems] = useState<{name: string, price: number, type: 'SERVICE' | 'PART'}[]>([]);
+  const [newCustom, setNewCustom] = useState({ name: '', price: '', type: 'SERVICE' as 'SERVICE' | 'PART' });
   const [saving, setSaving] = useState(false);
+
+  const addCustomItem = () => {
+    if (!newCustom.name || !newCustom.price) return;
+    setCustomItems([...customItems, { name: newCustom.name.toUpperCase(), price: Number(newCustom.price), type: newCustom.type }]);
+    setNewCustom({ name: '', price: '', type: 'SERVICE' });
+  };
+
+  const removeCustomItem = (index: number) => {
+    setCustomItems(customItems.filter((_, i) => i !== index));
+  };
 
   const save = async () => {
     if (!form.clientName || !form.carModel) return alert("Por favor rellene nombre y vehículo.");
     setSaving(true);
     try {
-      const items = (catalog || []).filter((c:any) => selected.includes(c.id)).map((c:any) => ({ ...c, status: ItemStatus.PENDING, id: Math.random().toString(36).substr(2, 5) }));
+      // Items del catálogo
+      const catalogItems = (catalog || []).filter((c:any) => selected.includes(c.id)).map((c:any) => ({ 
+        ...c, 
+        status: ItemStatus.PENDING, 
+        id: Math.random().toString(36).substr(2, 5),
+        isCustom: false 
+      }));
+      // Items personalizados
+      const customItemsFormatted = customItems.map(c => ({
+        id: Math.random().toString(36).substr(2, 5),
+        name: c.name,
+        price: c.price,
+        type: c.type,
+        status: ItemStatus.PENDING,
+        isCustom: true
+      }));
+      const items = [...catalogItems, ...customItemsFormatted];
       const folio = `AW-${Math.floor(10000 + Math.random() * 90000)}`;
       const jobData = { ...form, id: folio, items, overallStatus: RepairStatus.OPERATIONS, messages: [], createdAt: Date.now(), intakeDate: Date.now(), totalBudget: items.reduce((a:any,b:any)=>a+(b.price || 0), 0) };
       await addDoc(collection(db, "jobs"), sanitizeData(jobData));
       onCancel();
     } catch (err) { alert("Error al registrar entrada."); } finally { setSaving(false); }
   };
+
+  const totalCatalog = (catalog || []).filter((c:any) => selected.includes(c.id)).reduce((a:number, b:any) => a + (b.price || 0), 0);
+  const totalCustom = customItems.reduce((a, b) => a + b.price, 0);
+  const totalGeneral = totalCatalog + totalCustom;
 
   return (
     <div className="max-w-2xl mx-auto bg-white border-2 border-slate-100 p-6 md:p-12 rounded-[30px] md:rounded-[60px] shadow-xl space-y-8 animate-in slide-in-from-bottom-12 duration-500">
@@ -639,8 +818,10 @@ const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
         <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Marca / Modelo" value={form.carModel} onChange={e => setForm({...form, carModel: e.target.value})} />
         <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm font-mono uppercase outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Placa" value={form.plate} onChange={e => setForm({...form, plate: e.target.value})} />
       </div>
-      <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar border-t border-slate-200 pt-6">
-        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-2 mb-2">Seleccione Servicios</p>
+      
+      {/* Servicios del catálogo */}
+      <div className="space-y-3 max-h-40 overflow-y-auto no-scrollbar border-t border-slate-200 pt-6">
+        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-2 mb-2">Servicios del Catálogo</p>
         {(catalog || []).map((s:any) => (
           <button key={s.id} onClick={() => setSelected(p => p.includes(s.id) ? p.filter(x=>x!==s.id) : [...p, s.id])} className={`w-full p-4 rounded-xl md:rounded-2xl border-2 text-left flex justify-between items-center transition-all ${selected.includes(s.id) ? 'border-blue-500 bg-blue-50 shadow-md scale-[1.02]' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
             <span className={`text-[10px] md:text-xs font-black uppercase ${selected.includes(s.id) ? 'text-blue-700' : 'text-slate-700'}`}>{s.name}</span>
@@ -648,6 +829,65 @@ const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
           </button>
         ))}
       </div>
+
+      {/* Servicios personalizados */}
+      <div className="border-t border-slate-200 pt-6 space-y-4">
+        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-2">Agregar Servicio Personalizado</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input 
+            className="md:col-span-2 bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 text-slate-800 text-xs outline-none focus:border-blue-500 placeholder:text-slate-400" 
+            placeholder="Ej: Trapo rojo extra" 
+            value={newCustom.name} 
+            onChange={e => setNewCustom({...newCustom, name: e.target.value})} 
+          />
+          <input 
+            type="number"
+            className="bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 text-slate-800 text-xs outline-none focus:border-blue-500 placeholder:text-slate-400" 
+            placeholder="Precio" 
+            value={newCustom.price} 
+            onChange={e => setNewCustom({...newCustom, price: e.target.value})} 
+          />
+          <select 
+            className="bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 text-slate-800 text-xs outline-none focus:border-blue-500"
+            value={newCustom.type}
+            onChange={e => setNewCustom({...newCustom, type: e.target.value as 'SERVICE' | 'PART'})}
+          >
+            <option value="SERVICE">Servicio</option>
+            <option value="PART">Refacción</option>
+          </select>
+        </div>
+        <button onClick={addCustomItem} className="bg-amber-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-amber-400 transition-all flex items-center gap-2">
+          <PlusCircle className="w-4 h-4" /> Agregar Personalizado
+        </button>
+
+        {/* Lista de personalizados agregados */}
+        {customItems.length > 0 && (
+          <div className="space-y-2 mt-4">
+            <p className="text-[8px] font-bold text-amber-700 uppercase">Personalizados agregados:</p>
+            {customItems.map((item, idx) => (
+              <div key={idx} className="flex justify-between items-center bg-amber-50 border-2 border-amber-200 p-3 rounded-xl">
+                <div>
+                  <span className="text-[10px] font-black text-amber-800 uppercase">{item.name}</span>
+                  <span className="text-[8px] text-amber-600 ml-2">({item.type === 'PART' ? 'Refacción' : 'Servicio'})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-black text-amber-700">${item.price.toLocaleString()}</span>
+                  <button onClick={() => removeCustomItem(idx)} className="text-amber-600 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Total */}
+      <div className="flex justify-end border-t border-slate-200 pt-4">
+        <div className="text-right">
+          <p className="text-[9px] font-bold text-slate-500 uppercase">Total Estimado</p>
+          <p className="text-2xl font-black font-mono text-slate-800">${totalGeneral.toLocaleString()}</p>
+        </div>
+      </div>
+
       <div className="flex gap-4">
         <button onClick={onCancel} className="flex-1 bg-slate-100 border-2 border-slate-200 py-4 rounded-xl md:rounded-2xl font-black text-xs text-slate-700 uppercase hover:bg-slate-200 transition-colors">Cancelar</button>
         <button onClick={save} disabled={saving} className="flex-1 py-4 rounded-xl md:rounded-2xl font-black text-xs text-white uppercase shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-xl transition-all" style={{ backgroundColor: workshop.primaryColor }}>
