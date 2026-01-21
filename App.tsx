@@ -305,6 +305,11 @@ const App: React.FC = () => {
         {view === 'ADMIN_PANEL' && <AdminControlCenter users={users} services={services} workshop={workshop} showSuccess={showSuccess} />}
         {view === 'CLIENT_TRACK' && <ClientTrackingView setActiveJob={(j: any) => { setActiveJob(j); setView('STATION_SCAN'); }} workshop={workshop} />}
       </main>
+
+      {/* Footer con versión */}
+      <footer className="text-center py-4 border-t border-slate-200">
+        <p className="text-[10px] text-slate-400 font-mono">v1.2.0</p>
+      </footer>
     </div>
   );
 };
@@ -1171,6 +1176,7 @@ const LoginView = ({ workshop }: { workshop: WorkshopSettings }) => {
           </button>
         </form>
         <button onClick={() => setIsLogin(!isLogin)} className="w-full mt-8 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">{isLogin ? '¿No tiene cuenta? Regístrese' : '¿Ya tiene cuenta? Acceda aquí'}</button>
+        <p className="text-center mt-6 text-[10px] text-slate-400 font-mono">v1.2.0</p>
       </div>
     </div>
   );
