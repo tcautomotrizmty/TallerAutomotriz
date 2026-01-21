@@ -124,18 +124,18 @@ const ImageUploader = ({ onUpload, label, currentImage, isReadOnly }: { onUpload
     <div className="flex flex-col items-center gap-2 group">
       <div 
         onClick={() => !isReadOnly && !compressing && fileRef.current?.click()}
-        className={`w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all relative ${currentImage ? 'border-blue-500 shadow-lg' : 'border-slate-700 bg-slate-800/50 hover:border-slate-500'} ${!isReadOnly && 'cursor-pointer'}`}
+        className={`w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all relative ${currentImage ? 'border-blue-500 shadow-lg' : 'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50'} ${!isReadOnly && 'cursor-pointer'}`}
       >
         {compressing ? (
           <Loader2 className="w-5 h-5 md:w-6 md:h-6 text-blue-500 animate-spin" />
         ) : currentImage ? (
           <img src={currentImage} className="w-full h-full object-cover" alt="Evidencia" />
         ) : (
-          <Camera className="w-5 h-5 md:w-6 md:h-6 text-slate-500" />
+          <Camera className="w-5 h-5 md:w-6 md:h-6 text-slate-400" />
         )}
       </div>
       <input type="file" ref={fileRef} className="hidden" accept="image/*" capture="environment" onChange={handleFile} />
-      <span className="text-[7px] md:text-[8px] font-black uppercase text-slate-500 tracking-tighter">{label}</span>
+      <span className="text-[7px] md:text-[8px] font-bold uppercase text-slate-500 tracking-tighter">{label}</span>
     </div>
   );
 };
@@ -267,32 +267,32 @@ const App: React.FC = () => {
     link.click();
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center bg-slate-950"><Loader2 className="w-10 h-10 text-blue-500 animate-spin" /></div>;
+  if (loading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="w-10 h-10 text-blue-500 animate-spin" /></div>;
   if (!user) return <LoginView workshop={workshop} />;
   if (view === 'INVOICE_PRINT' && activeJob) return <InvoicePrintView job={activeJob} workshop={workshop} onBack={() => setView('STATION_SCAN')} />;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-900 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-white overflow-x-hidden">
       <Toast message={toast.message} show={toast.show} />
-      <header className="sticky top-0 z-50 bg-slate-800/95 backdrop-blur-md border-b border-slate-700 p-3 md:p-4">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 p-3 md:p-4 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 overflow-hidden cursor-pointer" onClick={() => setView(profile?.role === UserRole.CLIENT ? 'CLIENT_TRACK' : 'STAFF_DASHBOARD')}>
             <div className="p-1.5 rounded-lg flex-shrink-0" style={{ backgroundColor: workshop.primaryColor }}>
               <Wrench className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
-            <h1 className="text-sm md:text-xl font-black text-white tracking-tighter uppercase truncate max-w-[140px] md:max-w-none">{workshop.name}</h1>
+            <h1 className="text-sm md:text-xl font-black text-slate-800 tracking-tighter uppercase truncate max-w-[140px] md:max-w-none">{workshop.name}</h1>
           </div>
           <nav className="flex gap-1 md:gap-2 items-center">
             {profile?.role !== UserRole.CLIENT && (
               <>
-                <button onClick={() => setView('STAFF_DASHBOARD')} title="Dashboard" className={`p-2 rounded-xl transition-colors ${view === 'STAFF_DASHBOARD' ? 'bg-white/10 text-white' : 'text-slate-400'}`}><ClipboardCheck className="w-5 h-5" /></button>
-                <button onClick={() => setView('ADMIN_HISTORY')} title="Historial" className={`p-2 rounded-xl transition-colors ${view === 'ADMIN_HISTORY' ? 'bg-white/10 text-white' : 'text-slate-400'}`}><History className="w-5 h-5" /></button>
+                <button onClick={() => setView('STAFF_DASHBOARD')} title="Dashboard" className={`p-2 rounded-xl transition-colors ${view === 'STAFF_DASHBOARD' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><ClipboardCheck className="w-5 h-5" /></button>
+                <button onClick={() => setView('ADMIN_HISTORY')} title="Historial" className={`p-2 rounded-xl transition-colors ${view === 'ADMIN_HISTORY' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><History className="w-5 h-5" /></button>
                 {profile?.role === UserRole.ADMIN && (
-                  <button onClick={() => setView('ADMIN_PANEL')} title="Administración" className={`p-2 rounded-xl transition-colors ${view === 'ADMIN_PANEL' ? 'bg-white/10 text-white' : 'text-slate-400'}`}><ShieldCheck className="w-5 h-5" /></button>
+                  <button onClick={() => setView('ADMIN_PANEL')} title="Administración" className={`p-2 rounded-xl transition-colors ${view === 'ADMIN_PANEL' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><ShieldCheck className="w-5 h-5" /></button>
                 )}
               </>
             )}
-            <button onClick={() => signOut(auth)} className="ml-2 p-2 text-slate-500 hover:text-red-500 transition-colors"><LogOut className="w-5 h-5" /></button>
+            <button onClick={() => signOut(auth)} className="ml-2 p-2 text-slate-400 hover:text-red-500 transition-colors"><LogOut className="w-5 h-5" /></button>
           </nav>
         </div>
       </header>
@@ -317,11 +317,11 @@ const AdminControlCenter = ({ users, services, workshop, showSuccess }: any) => 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col gap-2">
-        <h2 className="text-2xl md:text-5xl font-black text-white uppercase tracking-tighter">Panel de Control</h2>
-        <div className="flex bg-slate-800 p-1 rounded-2xl md:rounded-3xl border border-white/5 overflow-x-auto no-scrollbar">
-          <button onClick={() => setTab('services')} className={`flex-1 py-3 px-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase transition-all whitespace-nowrap ${tab === 'services' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Servicios</button>
-          <button onClick={() => setTab('users')} className={`flex-1 py-3 px-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase transition-all whitespace-nowrap ${tab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Personal</button>
-          <button onClick={() => setTab('config')} className={`flex-1 py-3 px-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase transition-all whitespace-nowrap ${tab === 'config' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500'}`}>Facturación</button>
+        <h2 className="text-2xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter">Panel de Control</h2>
+        <div className="flex bg-slate-100 p-1 rounded-2xl md:rounded-3xl border border-slate-200 overflow-x-auto no-scrollbar">
+          <button onClick={() => setTab('services')} className={`flex-1 py-3 px-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase transition-all whitespace-nowrap ${tab === 'services' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-800'}`}>Servicios</button>
+          <button onClick={() => setTab('users')} className={`flex-1 py-3 px-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase transition-all whitespace-nowrap ${tab === 'users' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-800'}`}>Personal</button>
+          <button onClick={() => setTab('config')} className={`flex-1 py-3 px-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase transition-all whitespace-nowrap ${tab === 'config' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-600 hover:text-slate-800'}`}>Facturación</button>
         </div>
       </div>
 
@@ -359,36 +359,36 @@ const ServiceManager = ({ services, showSuccess }: any) => {
 
   return (
     <div className="space-y-6">
-      <div className="glass-panel p-6 rounded-3xl border border-blue-500/20 space-y-4">
-        <h3 className="text-xs font-black text-blue-500 uppercase tracking-widest">Añadir Nuevo Servicio</h3>
+      <div className="bg-blue-50 border-2 border-blue-200 p-6 rounded-3xl space-y-4">
+        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest">Añadir Nuevo Servicio</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-blue-500" placeholder="Nombre del Servicio" value={newSrv.name} onChange={e => setNewSrv({...newSrv, name: e.target.value})} />
-          <input className="bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-blue-500" type="number" placeholder="Precio MXN" value={newSrv.price} onChange={e => setNewSrv({...newSrv, price: e.target.value})} />
+          <input className="bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Nombre del Servicio" value={newSrv.name} onChange={e => setNewSrv({...newSrv, name: e.target.value})} />
+          <input className="bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 text-xs outline-none focus:border-blue-500 placeholder:text-slate-400" type="number" placeholder="Precio MXN" value={newSrv.price} onChange={e => setNewSrv({...newSrv, price: e.target.value})} />
           <button onClick={addSrv} className="bg-blue-600 rounded-xl py-3 font-black text-white text-xs uppercase hover:bg-blue-500 transition-all flex items-center justify-center gap-2"><PlusCircle className="w-4 h-4" /> Agregar</button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(services || []).map((s: any) => (
-          <div key={s.id} className="glass-panel p-5 rounded-[25px] border border-white/5 flex flex-col justify-between group">
+          <div key={s.id} className="bg-white border-2 border-slate-100 p-5 rounded-[25px] flex flex-col justify-between group shadow-sm hover:shadow-md transition-all">
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1 overflow-hidden">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Concepto</p>
-                <h4 className="text-xs md:text-sm font-black text-white uppercase truncate pr-2">{s.name}</h4>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter mb-1">Concepto</p>
+                <h4 className="text-xs md:text-sm font-black text-slate-800 uppercase truncate pr-2">{s.name}</h4>
               </div>
-              <button onClick={() => deleteSrv(s.id)} className="p-2 text-slate-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={() => deleteSrv(s.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
             </div>
             <div className="flex items-end justify-between gap-4">
               <div className="flex-1">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-tighter mb-1">Precio Actual</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter mb-1">Precio Actual</p>
                 {editingId === s.id ? (
                   <div className="flex gap-2">
-                    <input autoFocus className="w-full bg-slate-950 border border-blue-500 rounded-lg px-2 py-1 text-xs font-mono text-white" defaultValue={s.price} onBlur={(e) => updatePrice(s.id, Number(e.target.value))} />
+                    <input autoFocus className="w-full bg-slate-50 border-2 border-blue-500 rounded-lg px-2 py-1 text-xs font-mono text-slate-800" defaultValue={s.price} onBlur={(e) => updatePrice(s.id, Number(e.target.value))} />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => setEditingId(s.id)}>
-                    <span className="text-xl font-mono font-black text-blue-500">${s.price.toLocaleString()}</span>
-                    <Edit2 className="w-3 h-3 text-slate-600" />
+                    <span className="text-xl font-mono font-black text-blue-600">${s.price.toLocaleString()}</span>
+                    <Edit2 className="w-3 h-3 text-slate-400" />
                   </div>
                 )}
               </div>
@@ -403,17 +403,17 @@ const ServiceManager = ({ services, showSuccess }: any) => {
 const UserManager = ({ users, workshop }: any) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
     {(users || []).map((u:any) => (
-      <div key={u.id} className="glass-panel p-6 md:p-8 rounded-[30px] md:rounded-[40px] space-y-6 shadow-xl border border-white/5">
+      <div key={u.id} className="bg-white border-2 border-slate-100 p-6 md:p-8 rounded-[30px] md:rounded-[40px] space-y-6 shadow-md">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-white text-xl md:text-3xl shadow-lg" style={{ backgroundColor: workshop.primaryColor }}>{u.name?.[0] || '?'}</div>
           <div className="overflow-hidden">
-            <p className="text-sm md:text-lg font-black uppercase text-white truncate">{u.name}</p>
+            <p className="text-sm md:text-lg font-black uppercase text-slate-800 truncate">{u.name}</p>
             <p className="text-[9px] md:text-[10px] text-slate-500 truncate">{u.email}</p>
           </div>
         </div>
-        <div className="flex gap-1 p-1 bg-slate-950 rounded-xl md:rounded-2xl border border-white/5">
+        <div className="flex gap-1 p-1 bg-slate-100 rounded-xl md:rounded-2xl border border-slate-200">
           {Object.values(UserRole).map(r => (
-            <button key={r} onClick={() => updateDoc(doc(db, "users", u.id), {role: r})} className={`flex-1 py-2 rounded-lg md:rounded-xl text-[7px] md:text-[8px] font-black uppercase transition-all ${u.role === r ? 'text-white' : 'text-slate-500'}`} style={u.role === r ? { backgroundColor: workshop.primaryColor } : {}}>{r}</button>
+            <button key={r} onClick={() => updateDoc(doc(db, "users", u.id), {role: r})} className={`flex-1 py-2 rounded-lg md:rounded-xl text-[7px] md:text-[8px] font-black uppercase transition-all ${u.role === r ? 'text-white shadow-md' : 'text-slate-600 hover:text-slate-800'}`} style={u.role === r ? { backgroundColor: workshop.primaryColor } : {}}>{r}</button>
           ))}
         </div>
       </div>
@@ -431,40 +431,40 @@ const InvoiceConfig = ({ workshop, showSuccess }: any) => {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <div className="glass-panel p-8 rounded-[40px] border border-white/5 space-y-8">
+      <div className="bg-white border-2 border-slate-100 p-8 rounded-[40px] space-y-8 shadow-md">
         <div className="space-y-6">
-          <h3 className="text-sm font-black text-blue-500 uppercase tracking-[4px] border-b border-white/5 pb-4 flex items-center gap-2"><Layout className="w-5 h-5" /> Datos del Negocio</h3>
+          <h3 className="text-sm font-black text-blue-600 uppercase tracking-[4px] border-b border-slate-200 pb-4 flex items-center gap-2"><Layout className="w-5 h-5" /> Datos del Negocio</h3>
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">Nombre Comercial</label>
-              <input className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" value={local.name} onChange={e => setLocal({...local, name: e.target.value})} />
+              <label className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-1">Nombre Comercial</label>
+              <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" value={local.name} onChange={e => setLocal({...local, name: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">Eslogan o Lema</label>
-              <input className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" value={local.slogan} onChange={e => setLocal({...local, slogan: e.target.value})} />
+              <label className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-1">Eslogan o Lema</label>
+              <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" value={local.slogan} onChange={e => setLocal({...local, slogan: e.target.value})} />
             </div>
           </div>
         </div>
 
-        <div className="space-y-6 pt-8 border-t border-white/5">
-          <h3 className="text-sm font-black text-blue-500 uppercase tracking-[4px] border-b border-white/5 pb-4 flex items-center gap-2"><Printer className="w-5 h-5" /> Personalización de Factura</h3>
+        <div className="space-y-6 pt-8 border-t border-slate-200">
+          <h3 className="text-sm font-black text-blue-600 uppercase tracking-[4px] border-b border-slate-200 pb-4 flex items-center gap-2"><Printer className="w-5 h-5" /> Personalización de Factura</h3>
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">Título de la Factura (Encabezado)</label>
-              <input className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" placeholder="Ej: ORDEN DE SERVICIO" value={local.invoiceTitle} onChange={e => setLocal({...local, invoiceTitle: e.target.value})} />
+              <label className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-1">Título de la Factura (Encabezado)</label>
+              <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Ej: ORDEN DE SERVICIO" value={local.invoiceTitle} onChange={e => setLocal({...local, invoiceTitle: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">Subtítulo (Debajo del Título)</label>
-              <input className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" placeholder="Ej: COMPROBANTE DE RECEPCIÓN" value={local.invoiceSubtitle} onChange={e => setLocal({...local, invoiceSubtitle: e.target.value})} />
+              <label className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-1">Subtítulo (Debajo del Título)</label>
+              <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Ej: COMPROBANTE DE RECEPCIÓN" value={local.invoiceSubtitle} onChange={e => setLocal({...local, invoiceSubtitle: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">Nota Legal / Pie de Página (Garantías)</label>
-              <textarea className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500 min-h-[100px]" placeholder="Escribe aquí tus términos de garantía..." value={local.invoiceFooter} onChange={e => setLocal({...local, invoiceFooter: e.target.value})} />
+              <label className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-1">Nota Legal / Pie de Página (Garantías)</label>
+              <textarea className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 min-h-[100px] placeholder:text-slate-400" placeholder="Escribe aquí tus términos de garantía..." value={local.invoiceFooter} onChange={e => setLocal({...local, invoiceFooter: e.target.value})} />
             </div>
           </div>
         </div>
 
-        <button onClick={saveConfig} className="w-full bg-blue-600 py-5 rounded-[25px] font-black text-white uppercase tracking-widest shadow-2xl hover:bg-blue-500 transition-all flex items-center justify-center gap-3"><Save className="w-5 h-5" /> Guardar Todo</button>
+        <button onClick={saveConfig} className="w-full bg-blue-600 py-5 rounded-[25px] font-black text-white uppercase tracking-widest shadow-lg hover:bg-blue-500 hover:shadow-xl transition-all flex items-center justify-center gap-3"><Save className="w-5 h-5" /> Guardar Todo</button>
       </div>
     </div>
   );
@@ -474,23 +474,23 @@ const StaffDashboard = ({ jobs, workshop, onAdd, onJob }: any) => (
   <div className="space-y-6 md:space-y-12 animate-in fade-in duration-500">
     <div className="flex justify-between items-end">
       <div>
-        <h2 className="text-2xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">Vehículos <span style={{ color: workshop.primaryColor }}>Activos</span></h2>
-        <p className="text-slate-500 text-[9px] md:text-[12px] font-black uppercase tracking-widest mt-2">Monitoreo en tiempo real</p>
+        <h2 className="text-2xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter leading-none">Vehículos <span style={{ color: workshop.primaryColor }}>Activos</span></h2>
+        <p className="text-slate-500 text-[10px] md:text-[12px] font-bold uppercase tracking-widest mt-2">Monitoreo en tiempo real</p>
       </div>
-      <button onClick={onAdd} className="p-5 md:p-8 rounded-[30%] md:rounded-[35%] text-white shadow-2xl hover:scale-110 active:scale-95 transition-all" style={{ backgroundColor: workshop.primaryColor }}><Plus className="w-6 h-6 md:w-10 md:h-10" /></button>
+      <button onClick={onAdd} className="p-5 md:p-8 rounded-[30%] md:rounded-[35%] text-white shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all" style={{ backgroundColor: workshop.primaryColor }}><Plus className="w-6 h-6 md:w-10 md:h-10" /></button>
     </div>
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
       {(jobs || []).map((j:any) => (
-        <div key={j.id} onClick={() => onJob(j)} className="glass-panel p-6 md:p-10 rounded-[30px] md:rounded-[50px] cursor-pointer hover:border-blue-500/50 transition-all group shadow-xl">
+        <div key={j.id} onClick={() => onJob(j)} className="bg-white border-2 border-slate-100 p-6 md:p-10 rounded-[30px] md:rounded-[50px] cursor-pointer hover:border-blue-300 hover:shadow-lg transition-all group shadow-md">
           <div className="flex justify-between items-start mb-6 md:mb-8">
-            <span className="text-[10px] md:text-[12px] font-mono font-black border border-white/10 px-3 py-1 md:px-4 md:py-2 rounded-xl bg-white/5" style={{ color: workshop.primaryColor }}>{j.id}</span>
-            <span className="text-[8px] md:text-[9px] font-black uppercase text-slate-400 bg-white/5 px-2 py-1 rounded-lg">{STATUS_LABELS[j.overallStatus as RepairStatus]}</span>
+            <span className="text-[10px] md:text-[12px] font-mono font-black border-2 border-slate-200 px-3 py-1 md:px-4 md:py-2 rounded-xl bg-slate-50" style={{ color: workshop.primaryColor }}>{j.id}</span>
+            <span className="text-[8px] md:text-[9px] font-black uppercase text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">{STATUS_LABELS[j.overallStatus as RepairStatus]}</span>
           </div>
-          <h3 className="text-xl md:text-3xl font-black uppercase text-white truncate mb-1 md:mb-2 leading-tight">{j.carModel}</h3>
-          <p className="text-[9px] md:text-[11px] text-slate-500 font-black uppercase truncate">{j.clientName} • {j.plate}</p>
-          <div className="mt-8 md:mt-10 flex items-center justify-between border-t border-white/5 pt-4 md:pt-6">
-            <p className="text-[8px] md:text-[9px] font-black text-slate-600 uppercase">Tec: {j.assignedTechnician || '---'}</p>
-            <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-500 transition-colors" />
+          <h3 className="text-xl md:text-3xl font-black uppercase text-slate-800 truncate mb-1 md:mb-2 leading-tight">{j.carModel}</h3>
+          <p className="text-[9px] md:text-[11px] text-slate-500 font-bold uppercase truncate">{j.clientName} • {j.plate}</p>
+          <div className="mt-8 md:mt-10 flex items-center justify-between border-t border-slate-100 pt-4 md:pt-6">
+            <p className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase">Tec: {j.assignedTechnician || '---'}</p>
+            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
           </div>
         </div>
       ))}
@@ -501,19 +501,19 @@ const StaffDashboard = ({ jobs, workshop, onAdd, onJob }: any) => (
 const AdminHistoryView = ({ jobs, onExport, onJob }: any) => (
   <div className="space-y-6 animate-in fade-in duration-500">
     <div className="flex justify-between items-center">
-      <h2 className="text-xl md:text-4xl font-black text-white uppercase tracking-tighter">Historial</h2>
-      <button onClick={onExport} className="bg-slate-800 p-2 md:px-5 md:py-3 rounded-xl text-white flex items-center gap-2 text-[10px] md:text-xs font-black uppercase shadow-xl hover:bg-slate-700 transition-all"><Download className="w-4 h-4" /> CSV</button>
+      <h2 className="text-xl md:text-4xl font-black text-slate-800 uppercase tracking-tighter">Historial</h2>
+      <button onClick={onExport} className="bg-slate-100 border-2 border-slate-200 p-2 md:px-5 md:py-3 rounded-xl text-slate-700 flex items-center gap-2 text-[10px] md:text-xs font-black uppercase shadow-sm hover:bg-slate-200 transition-all"><Download className="w-4 h-4" /> CSV</button>
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {(jobs || []).map((j:any) => (
-        <div key={j.id} onClick={() => onJob(j)} className="glass-panel p-6 rounded-3xl border border-white/5 flex justify-between items-center cursor-pointer hover:bg-white/5">
+        <div key={j.id} onClick={() => onJob(j)} className="bg-white border-2 border-slate-100 p-6 rounded-3xl flex justify-between items-center cursor-pointer hover:border-blue-300 hover:shadow-md transition-all shadow-sm">
           <div>
-            <p className="text-[10px] font-mono font-black text-blue-500">{j.id}</p>
-            <h4 className="text-sm font-black text-white uppercase">{j.clientName}</h4>
+            <p className="text-[10px] font-mono font-black text-blue-600">{j.id}</p>
+            <h4 className="text-sm font-black text-slate-800 uppercase">{j.clientName}</h4>
             <p className="text-[9px] text-slate-500 font-bold uppercase">{j.carModel} • {j.plate}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-mono font-black text-white">${(j.totalBudget || 0).toLocaleString()}</p>
+            <p className="text-sm font-mono font-black text-slate-800">${(j.totalBudget || 0).toLocaleString()}</p>
             <p className="text-[8px] text-slate-500 uppercase">{new Date(j.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
@@ -557,49 +557,49 @@ const JobUpdateView = ({ job, onUpdate, profile, onBack, onPrint, workshop }: an
   return (
     <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-6 duration-500">
       <div className="flex justify-between items-center">
-        <button onClick={onBack} className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase flex items-center gap-2 hover:text-white transition-colors"><ChevronLeft className="w-4 h-4" /> Volver</button>
+        <button onClick={onBack} className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase flex items-center gap-2 hover:text-slate-800 transition-colors"><ChevronLeft className="w-4 h-4" /> Volver</button>
         <div className="flex gap-2">
-          <button onClick={onPrint} className="p-3 bg-slate-800 rounded-xl md:rounded-2xl text-white hover:bg-slate-700 transition-all"><Printer className="w-5 h-5" /></button>
-          {!isReadOnly && <button onClick={save} className="bg-green-600 px-6 py-3 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs text-white uppercase shadow-xl hover:scale-105 transition-all">Guardar</button>}
+          <button onClick={onPrint} className="p-3 bg-slate-100 border-2 border-slate-200 rounded-xl md:rounded-2xl text-slate-700 hover:bg-slate-200 transition-all"><Printer className="w-5 h-5" /></button>
+          {!isReadOnly && <button onClick={save} className="bg-green-600 px-6 py-3 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs text-white uppercase shadow-lg hover:bg-green-500 hover:shadow-xl transition-all">Guardar</button>}
         </div>
       </div>
 
-      <div className="glass-panel p-6 md:p-10 rounded-[30px] md:rounded-[40px] border border-white/5 space-y-8 shadow-2xl">
+      <div className="bg-white border-2 border-slate-100 p-6 md:p-10 rounded-[30px] md:rounded-[40px] space-y-8 shadow-lg">
         <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
           <div className="max-w-full overflow-hidden">
-            <h2 className="text-2xl md:text-5xl font-black uppercase text-white tracking-tighter leading-tight truncate">{localJob.carModel}</h2>
+            <h2 className="text-2xl md:text-5xl font-black uppercase text-slate-800 tracking-tighter leading-tight truncate">{localJob.carModel}</h2>
             <div className="flex items-center gap-4 mt-2">
-              <span className="text-sm md:text-xl font-black font-mono text-blue-500">{localJob.plate}</span>
+              <span className="text-sm md:text-xl font-black font-mono text-blue-600">{localJob.plate}</span>
               <span className="text-xs md:text-sm text-slate-500 font-bold uppercase truncate">{localJob.clientName}</span>
             </div>
           </div>
           {!isReadOnly && (
             <div className="flex flex-col gap-2">
-              <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest px-2">Estado General</label>
-              <select className="bg-slate-900 border border-slate-700 rounded-xl md:rounded-2xl px-4 py-3 text-xs font-black text-white outline-none focus:border-blue-500" value={localJob.overallStatus} onChange={e => updateStatus(e.target.value as RepairStatus)}>
+              <label className="text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2">Estado General</label>
+              <select className="bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl px-4 py-3 text-xs font-black text-slate-800 outline-none focus:border-blue-500" value={localJob.overallStatus} onChange={e => updateStatus(e.target.value as RepairStatus)}>
                 {Object.entries(STATUS_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
               </select>
             </div>
           )}
         </div>
 
-        <div className="space-y-4 pt-8 border-t border-white/5">
+        <div className="space-y-4 pt-8 border-t border-slate-200">
           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[4px]">Servicios y Refacciones</h3>
           {(localJob.items || []).map(item => (
-            <div key={item.id} className="p-5 md:p-8 bg-slate-900/50 rounded-2xl md:rounded-3xl border border-white/5 space-y-6 hover:bg-slate-900/80 transition-all shadow-lg">
+            <div key={item.id} className="p-5 md:p-8 bg-slate-50 rounded-2xl md:rounded-3xl border-2 border-slate-100 space-y-6 hover:border-slate-200 transition-all shadow-sm">
               <div className="flex justify-between items-center gap-4">
                 <div className="flex items-center gap-4 flex-1">
                   {!isReadOnly && (
-                    <button onClick={() => toggleItemStatus(item.id)} className={`p-2 rounded-lg transition-all ${item.status === ItemStatus.COMPLETED ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}>
+                    <button onClick={() => toggleItemStatus(item.id)} className={`p-2 rounded-lg transition-all ${item.status === ItemStatus.COMPLETED ? 'bg-green-600 text-white shadow-lg' : 'bg-white text-slate-400 border-2 border-slate-200'}`}>
                       {item.status === ItemStatus.COMPLETED ? <CheckSquare className="w-5 h-5" /> : <SquareIcon className="w-5 h-5" />}
                     </button>
                   )}
                   <div className="overflow-hidden">
-                    <h4 className={`text-xs md:text-base font-black uppercase transition-colors ${item.status === ItemStatus.COMPLETED ? 'text-green-500' : 'text-white'}`}>{item.name}</h4>
-                    <p className="text-[8px] font-black text-slate-500 uppercase">{ITEM_STATUS_LABELS[item.status]}</p>
+                    <h4 className={`text-xs md:text-base font-black uppercase transition-colors ${item.status === ItemStatus.COMPLETED ? 'text-green-600' : 'text-slate-800'}`}>{item.name}</h4>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase">{ITEM_STATUS_LABELS[item.status]}</p>
                   </div>
                 </div>
-                <span className="font-mono text-xs md:text-base font-black text-blue-500">${(item.price || 0).toLocaleString()}</span>
+                <span className="font-mono text-xs md:text-base font-black text-blue-600">${(item.price || 0).toLocaleString()}</span>
               </div>
               <div className="flex gap-4 md:gap-10 justify-around md:justify-start">
                 <ImageUploader label="ESTADO INICIAL" currentImage={item.beforePhoto} onUpload={d => updateItemPhoto(item.id, 'beforePhoto', d)} isReadOnly={isReadOnly} />
@@ -631,26 +631,26 @@ const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto glass-panel p-6 md:p-12 rounded-[30px] md:rounded-[60px] shadow-2xl space-y-8 animate-in slide-in-from-bottom-12 duration-500">
-      <h2 className="text-xl md:text-4xl font-black uppercase text-white tracking-tighter">Nueva Recepción</h2>
+    <div className="max-w-2xl mx-auto bg-white border-2 border-slate-100 p-6 md:p-12 rounded-[30px] md:rounded-[60px] shadow-xl space-y-8 animate-in slide-in-from-bottom-12 duration-500">
+      <h2 className="text-xl md:text-4xl font-black uppercase text-slate-800 tracking-tighter">Nueva Recepción</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <input className="w-full bg-slate-900 border border-slate-700 rounded-xl md:rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" placeholder="Nombre del Cliente" value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})} />
-        <input className="w-full bg-slate-900 border border-slate-700 rounded-xl md:rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" placeholder="Teléfono" value={form.clientPhone} onChange={e => setForm({...form, clientPhone: e.target.value})} />
-        <input className="w-full bg-slate-900 border border-slate-700 rounded-xl md:rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" placeholder="Marca / Modelo" value={form.carModel} onChange={e => setForm({...form, carModel: e.target.value})} />
-        <input className="w-full bg-slate-900 border border-slate-700 rounded-xl md:rounded-2xl py-4 px-6 text-white text-sm font-mono uppercase outline-none focus:border-blue-500" placeholder="Placa" value={form.plate} onChange={e => setForm({...form, plate: e.target.value})} />
+        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Nombre del Cliente" value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})} />
+        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Teléfono" value={form.clientPhone} onChange={e => setForm({...form, clientPhone: e.target.value})} />
+        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Marca / Modelo" value={form.carModel} onChange={e => setForm({...form, carModel: e.target.value})} />
+        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm font-mono uppercase outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Placa" value={form.plate} onChange={e => setForm({...form, plate: e.target.value})} />
       </div>
-      <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar border-t border-white/5 pt-6">
-        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest px-2 mb-2">Seleccione Servicios</p>
+      <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar border-t border-slate-200 pt-6">
+        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-2 mb-2">Seleccione Servicios</p>
         {(catalog || []).map((s:any) => (
-          <button key={s.id} onClick={() => setSelected(p => p.includes(s.id) ? p.filter(x=>x!==s.id) : [...p, s.id])} className={`w-full p-4 rounded-xl md:rounded-2xl border-2 text-left flex justify-between items-center transition-all ${selected.includes(s.id) ? 'border-white bg-blue-600 shadow-lg scale-[1.02]' : 'border-slate-800 bg-slate-900 opacity-60'}`}>
-            <span className="text-[10px] md:text-xs font-black uppercase text-white">{s.name}</span>
-            <span className="font-mono text-xs md:text-sm font-black text-white">${(s.price || 0).toLocaleString()}</span>
+          <button key={s.id} onClick={() => setSelected(p => p.includes(s.id) ? p.filter(x=>x!==s.id) : [...p, s.id])} className={`w-full p-4 rounded-xl md:rounded-2xl border-2 text-left flex justify-between items-center transition-all ${selected.includes(s.id) ? 'border-blue-500 bg-blue-50 shadow-md scale-[1.02]' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+            <span className={`text-[10px] md:text-xs font-black uppercase ${selected.includes(s.id) ? 'text-blue-700' : 'text-slate-700'}`}>{s.name}</span>
+            <span className={`font-mono text-xs md:text-sm font-black ${selected.includes(s.id) ? 'text-blue-600' : 'text-slate-600'}`}>${(s.price || 0).toLocaleString()}</span>
           </button>
         ))}
       </div>
       <div className="flex gap-4">
-        <button onClick={onCancel} className="flex-1 bg-slate-800 py-4 rounded-xl md:rounded-2xl font-black text-xs text-white uppercase hover:bg-slate-700 transition-colors">Cancelar</button>
-        <button onClick={save} disabled={saving} className="flex-1 py-4 rounded-xl md:rounded-2xl font-black text-xs text-white uppercase shadow-xl disabled:opacity-50 flex items-center justify-center gap-2" style={{ backgroundColor: workshop.primaryColor }}>
+        <button onClick={onCancel} className="flex-1 bg-slate-100 border-2 border-slate-200 py-4 rounded-xl md:rounded-2xl font-black text-xs text-slate-700 uppercase hover:bg-slate-200 transition-colors">Cancelar</button>
+        <button onClick={save} disabled={saving} className="flex-1 py-4 rounded-xl md:rounded-2xl font-black text-xs text-white uppercase shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 hover:shadow-xl transition-all" style={{ backgroundColor: workshop.primaryColor }}>
           {saving && <Loader2 className="w-4 h-4 animate-spin" />} Registrar
         </button>
       </div>
@@ -676,13 +676,15 @@ const ClientTrackingView = ({ setActiveJob, workshop }: any) => {
   return (
     <div className="max-w-md mx-auto py-8 md:py-24 text-center space-y-10 md:space-y-16 animate-in zoom-in duration-700">
       <div className="flex flex-col items-center">
-        <Wrench className="w-16 h-16 md:w-24 md:h-24 mb-6 opacity-20" />
-        <h2 className="text-2xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none">{workshop.name}</h2>
-        <p className="text-slate-500 text-[9px] md:text-sm font-black mt-3 md:mt-4 uppercase tracking-[3px] md:tracking-[5px]">{workshop.slogan}</p>
+        <div className="p-5 rounded-3xl mb-6" style={{ backgroundColor: `${workshop.primaryColor}20` }}>
+          <Wrench className="w-12 h-12 md:w-16 md:h-16" style={{ color: workshop.primaryColor }} />
+        </div>
+        <h2 className="text-2xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter leading-none">{workshop.name}</h2>
+        <p className="text-slate-500 text-[10px] md:text-sm font-bold mt-3 md:mt-4 uppercase tracking-[3px] md:tracking-[5px]">{workshop.slogan}</p>
       </div>
       <div className="space-y-6">
-        <input className="w-full bg-slate-800 border-4 border-slate-700 rounded-[25px] md:rounded-[40px] py-6 md:py-10 text-xl md:text-4xl text-center font-mono uppercase text-white outline-none focus:border-blue-500 transition-all shadow-2xl" placeholder="INGRESE FOLIO" value={q} onChange={e => setQ(e.target.value)} onKeyPress={e => e.key === 'Enter' && find()} />
-        <button onClick={find} disabled={searching} className="w-full py-6 md:py-8 rounded-[25px] md:rounded-[40px] font-black text-base md:text-2xl text-white uppercase tracking-widest shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3" style={{ backgroundColor: workshop.primaryColor }}>
+        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-[25px] md:rounded-[40px] py-6 md:py-10 text-xl md:text-4xl text-center font-mono uppercase text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-lg placeholder:text-slate-400" placeholder="INGRESE FOLIO" value={q} onChange={e => setQ(e.target.value)} onKeyPress={e => e.key === 'Enter' && find()} />
+        <button onClick={find} disabled={searching} className="w-full py-6 md:py-8 rounded-[25px] md:rounded-[40px] font-black text-base md:text-2xl text-white uppercase tracking-widest shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3" style={{ backgroundColor: workshop.primaryColor }}>
           {searching ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Consultar Estatus'}
         </button>
       </div>
@@ -900,22 +902,35 @@ const LoginView = ({ workshop }: { workshop: WorkshopSettings }) => {
     } catch (err: any) { alert("Error: " + err.message); } finally { setLoading(false); }
   };
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-950">
-      <div className="w-full max-sm bg-slate-900 border border-slate-800 rounded-[40px] md:rounded-[50px] p-8 md:p-12 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-white">
+      <div className="w-full max-w-sm bg-white border-2 border-slate-200 rounded-[40px] md:rounded-[50px] p-8 md:p-12 shadow-xl">
         <div className="flex flex-col items-center mb-10 text-center">
-          <Wrench className="w-12 h-12 mb-4" style={{ color: workshop.primaryColor }} />
-          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase leading-tight">{workshop.name}</h2>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-3">Portal de Gestión Automotriz</p>
+          <div className="p-4 rounded-2xl mb-4" style={{ backgroundColor: workshop.primaryColor }}>
+            <Wrench className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter uppercase leading-tight">{workshop.name}</h2>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-3">Portal de Gestión Automotriz</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && <input className="w-full bg-slate-800 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" placeholder="Nombre Completo" value={name} onChange={e => setName(e.target.value)} required />}
-          <input className="w-full bg-slate-800 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" type="email" placeholder="Correo Electrónico" value={email} onChange={e => setEmail(e.target.value)} required />
-          <input className="w-full bg-slate-800 border border-slate-700 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-blue-500" type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
-          <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl font-black text-white shadow-2xl transition-all hover:brightness-110 flex items-center justify-center gap-2" style={{ backgroundColor: workshop.primaryColor }}>
+          {!isLogin && (
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Nombre Completo" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+          )}
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" type="email" placeholder="Correo Electrónico" value={email} onChange={e => setEmail(e.target.value)} required />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} required />
+          </div>
+          <button type="submit" disabled={loading} className="w-full py-4 rounded-2xl font-black text-white shadow-lg transition-all hover:brightness-110 hover:shadow-xl flex items-center justify-center gap-2" style={{ backgroundColor: workshop.primaryColor }}>
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? 'Iniciar Sesión' : 'Crear Cuenta')}
           </button>
         </form>
-        <button onClick={() => setIsLogin(!isLogin)} className="w-full mt-8 text-slate-500 text-[9px] font-black uppercase tracking-widest hover:text-white transition-colors">{isLogin ? '¿No tiene cuenta? Regístrese' : '¿Ya tiene cuenta? Acceda aquí'}</button>
+        <button onClick={() => setIsLogin(!isLogin)} className="w-full mt-8 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">{isLogin ? '¿No tiene cuenta? Regístrese' : '¿Ya tiene cuenta? Acceda aquí'}</button>
       </div>
     </div>
   );
