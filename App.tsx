@@ -8,7 +8,7 @@ import {
   Printer, FileJson, Play, Square, UserPlus, Camera, Image as ImageIcon,
   History, Calendar, PlayCircle, CheckCircle, ChevronDown, ChevronUp, Palette,
   CircleDot, CheckCircle2 as CheckIcon, PlusCircle, Loader2, Filter,
-  CheckSquare, Square as SquareIcon, Save, Layout
+  CheckSquare, Square as SquareIcon, Save, Layout, Copy, Eye
 } from 'lucide-react';
 import { 
   onAuthStateChanged, 
@@ -287,6 +287,7 @@ const App: React.FC = () => {
               <>
                 <button onClick={() => setView('STAFF_DASHBOARD')} title="Dashboard" className={`p-2 rounded-xl transition-colors ${view === 'STAFF_DASHBOARD' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><ClipboardCheck className="w-5 h-5" /></button>
                 <button onClick={() => setView('ADMIN_HISTORY')} title="Historial" className={`p-2 rounded-xl transition-colors ${view === 'ADMIN_HISTORY' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><History className="w-5 h-5" /></button>
+                <button onClick={() => setView('CLIENT_TRACK')} title="Vista Cliente" className={`p-2 rounded-xl transition-colors ${view === 'CLIENT_TRACK' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><Eye className="w-5 h-5" /></button>
                 {profile?.role === UserRole.ADMIN && (
                   <button onClick={() => setView('ADMIN_PANEL')} title="Administración" className={`p-2 rounded-xl transition-colors ${view === 'ADMIN_PANEL' ? 'bg-blue-100 text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}><ShieldCheck className="w-5 h-5" /></button>
                 )}
@@ -303,12 +304,12 @@ const App: React.FC = () => {
         {view === 'RECEPTION' && <ReceptionView catalog={services} onCancel={() => setView('STAFF_DASHBOARD')} workshop={workshop} />}
         {view === 'STATION_SCAN' && activeJob && <JobUpdateView job={activeJob} catalog={services} staff={users.filter(u => u.role !== UserRole.CLIENT)} onUpdate={handleUpdateJob} profile={profile} onBack={() => setView(profile?.role === UserRole.CLIENT ? 'CLIENT_TRACK' : 'STAFF_DASHBOARD')} onPrint={() => setView('INVOICE_PRINT')} workshop={workshop} />}
         {view === 'ADMIN_PANEL' && <AdminControlCenter users={users} services={services} workshop={workshop} showSuccess={showSuccess} />}
-        {view === 'CLIENT_TRACK' && <ClientTrackingView setActiveJob={(j: any) => { setActiveJob(j); setView('STATION_SCAN'); }} workshop={workshop} />}
+        {view === 'CLIENT_TRACK' && <ClientTrackingView setActiveJob={(j: any) => { setActiveJob(j); setView('STATION_SCAN'); }} workshop={workshop} profile={profile} />}
       </main>
 
       {/* Footer con versión */}
       <footer className="text-center py-4 border-t border-slate-200">
-        <p className="text-[10px] text-slate-400 font-mono">v1.2.0</p>
+        <p className="text-[10px] text-slate-400 font-mono">v1.4.0</p>
       </footer>
     </div>
   );
@@ -475,57 +476,144 @@ const InvoiceConfig = ({ workshop, showSuccess }: any) => {
   );
 };
 
-const StaffDashboard = ({ jobs, workshop, onAdd, onJob }: any) => (
-  <div className="space-y-6 md:space-y-12 animate-in fade-in duration-500">
-    <div className="flex justify-between items-end">
-      <div>
-        <h2 className="text-2xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter leading-none">Vehículos <span style={{ color: workshop.primaryColor }}>Activos</span></h2>
-        <p className="text-slate-500 text-[10px] md:text-[12px] font-bold uppercase tracking-widest mt-2">Monitoreo en tiempo real</p>
-      </div>
-      <button onClick={onAdd} className="p-5 md:p-8 rounded-[30%] md:rounded-[35%] text-white shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all" style={{ backgroundColor: workshop.primaryColor }}><Plus className="w-6 h-6 md:w-10 md:h-10" /></button>
-    </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-      {(jobs || []).map((j:any) => (
-        <div key={j.id} onClick={() => onJob(j)} className="bg-white border-2 border-slate-100 p-6 md:p-10 rounded-[30px] md:rounded-[50px] cursor-pointer hover:border-blue-300 hover:shadow-lg transition-all group shadow-md">
-          <div className="flex justify-between items-start mb-6 md:mb-8">
-            <span className="text-[10px] md:text-[12px] font-mono font-black border-2 border-slate-200 px-3 py-1 md:px-4 md:py-2 rounded-xl bg-slate-50" style={{ color: workshop.primaryColor }}>{j.id}</span>
-            <span className="text-[8px] md:text-[9px] font-black uppercase text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">{STATUS_LABELS[j.overallStatus as RepairStatus]}</span>
-          </div>
-          <h3 className="text-xl md:text-3xl font-black uppercase text-slate-800 truncate mb-1 md:mb-2 leading-tight">{j.carModel}</h3>
-          <p className="text-[9px] md:text-[11px] text-slate-500 font-bold uppercase truncate">{j.clientName} • {j.plate}</p>
-          <div className="mt-8 md:mt-10 flex items-center justify-between border-t border-slate-100 pt-4 md:pt-6">
-            <p className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase">Tec: {j.assignedTechnician || '---'}</p>
-            <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+const StaffDashboard = ({ jobs, workshop, onAdd, onJob }: any) => {
+  const [searchFilter, setSearchFilter] = useState('');
+  const [copied, setCopied] = useState<string | null>(null);
 
-const AdminHistoryView = ({ jobs, onExport, onJob }: any) => (
-  <div className="space-y-6 animate-in fade-in duration-500">
-    <div className="flex justify-between items-center">
-      <h2 className="text-xl md:text-4xl font-black text-slate-800 uppercase tracking-tighter">Historial</h2>
-      <button onClick={onExport} className="bg-slate-100 border-2 border-slate-200 p-2 md:px-5 md:py-3 rounded-xl text-slate-700 flex items-center gap-2 text-[10px] md:text-xs font-black uppercase shadow-sm hover:bg-slate-200 transition-all"><Download className="w-4 h-4" /> CSV</button>
-    </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {(jobs || []).map((j:any) => (
-        <div key={j.id} onClick={() => onJob(j)} className="bg-white border-2 border-slate-100 p-6 rounded-3xl flex justify-between items-center cursor-pointer hover:border-blue-300 hover:shadow-md transition-all shadow-sm">
-          <div>
-            <p className="text-[10px] font-mono font-black text-blue-600">{j.id}</p>
-            <h4 className="text-sm font-black text-slate-800 uppercase">{j.clientName}</h4>
-            <p className="text-[9px] text-slate-500 font-bold uppercase">{j.carModel} • {j.plate}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-mono font-black text-slate-800">${(j.totalBudget || 0).toLocaleString()}</p>
-            <p className="text-[8px] text-slate-500 uppercase">{new Date(j.createdAt).toLocaleDateString()}</p>
-          </div>
+  const filteredJobs = (jobs || []).filter((j: any) => {
+    if (!searchFilter.trim()) return true;
+    const q = searchFilter.toLowerCase();
+    return j.id?.toLowerCase().includes(q) || j.plate?.toLowerCase().includes(q);
+  });
+
+  const copyFolio = (e: React.MouseEvent, folio: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(folio);
+    setCopied(folio);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  return (
+    <div className="space-y-6 md:space-y-12 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-4">
+        <div>
+          <h2 className="text-2xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter leading-none">Vehículos <span style={{ color: workshop.primaryColor }}>Activos</span></h2>
+          <p className="text-slate-500 text-[10px] md:text-[12px] font-bold uppercase tracking-widest mt-2">Monitoreo en tiempo real</p>
         </div>
-      ))}
+        <button onClick={onAdd} className="p-5 md:p-8 rounded-[30%] md:rounded-[35%] text-white shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all self-end" style={{ backgroundColor: workshop.primaryColor }}><Plus className="w-6 h-6 md:w-10 md:h-10" /></button>
+      </div>
+      
+      {/* Filtro de búsqueda */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        <input 
+          className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-400"
+          placeholder="Buscar por folio o placa..."
+          value={searchFilter}
+          onChange={e => setSearchFilter(e.target.value)}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+        {filteredJobs.map((j:any) => (
+          <div key={j.id} onClick={() => onJob(j)} className="bg-white border-2 border-slate-100 p-6 md:p-10 rounded-[30px] md:rounded-[50px] cursor-pointer hover:border-blue-300 hover:shadow-lg transition-all group shadow-md">
+            <div className="flex justify-between items-start mb-6 md:mb-8">
+              <button 
+                onClick={(e) => copyFolio(e, j.id)} 
+                className="flex items-center gap-2 text-[10px] md:text-[12px] font-mono font-black border-2 border-slate-200 px-3 py-1 md:px-4 md:py-2 rounded-xl bg-slate-50 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                style={{ color: workshop.primaryColor }}
+                title="Copiar folio"
+              >
+                {j.id}
+                {copied === j.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+              </button>
+              <span className="text-[8px] md:text-[9px] font-black uppercase text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">{STATUS_LABELS[j.overallStatus as RepairStatus]}</span>
+            </div>
+            <h3 className="text-xl md:text-3xl font-black uppercase text-slate-800 truncate mb-1 md:mb-2 leading-tight">{j.carModel}</h3>
+            <p className="text-[9px] md:text-[11px] text-slate-500 font-bold uppercase truncate">{j.clientName} • {j.plate}</p>
+            <div className="mt-8 md:mt-10 flex items-center justify-between border-t border-slate-100 pt-4 md:pt-6">
+              <p className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase">Tec: {j.assignedTechnician || '---'}</p>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            </div>
+          </div>
+        ))}
+        {filteredJobs.length === 0 && searchFilter && (
+          <div className="col-span-full text-center py-12">
+            <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 font-bold text-sm">No se encontraron resultados para "{searchFilter}"</p>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const AdminHistoryView = ({ jobs, onExport, onJob }: any) => {
+  const [searchFilter, setSearchFilter] = useState('');
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const filteredJobs = (jobs || []).filter((j: any) => {
+    if (!searchFilter.trim()) return true;
+    const q = searchFilter.toLowerCase();
+    return j.id?.toLowerCase().includes(q) || j.plate?.toLowerCase().includes(q);
+  });
+
+  const copyFolio = (e: React.MouseEvent, folio: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(folio);
+    setCopied(folio);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <h2 className="text-xl md:text-4xl font-black text-slate-800 uppercase tracking-tighter">Historial</h2>
+        <button onClick={onExport} className="bg-slate-100 border-2 border-slate-200 p-2 md:px-5 md:py-3 rounded-xl text-slate-700 flex items-center gap-2 text-[10px] md:text-xs font-black uppercase shadow-sm hover:bg-slate-200 transition-all self-end"><Download className="w-4 h-4" /> CSV</button>
+      </div>
+      
+      {/* Filtro de búsqueda */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+        <input 
+          className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-slate-400"
+          placeholder="Buscar por folio o placa..."
+          value={searchFilter}
+          onChange={e => setSearchFilter(e.target.value)}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredJobs.map((j:any) => (
+          <div key={j.id} onClick={() => onJob(j)} className="bg-white border-2 border-slate-100 p-6 rounded-3xl flex justify-between items-center cursor-pointer hover:border-blue-300 hover:shadow-md transition-all shadow-sm">
+            <div>
+              <button 
+                onClick={(e) => copyFolio(e, j.id)} 
+                className="flex items-center gap-2 text-[10px] font-mono font-black text-blue-600 hover:text-blue-800 transition-colors"
+                title="Copiar folio"
+              >
+                {j.id}
+                {copied === j.id ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+              </button>
+              <h4 className="text-sm font-black text-slate-800 uppercase">{j.clientName}</h4>
+              <p className="text-[9px] text-slate-500 font-bold uppercase">{j.carModel} • {j.plate}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-mono font-black text-slate-800">${(j.totalBudget || 0).toLocaleString()}</p>
+              <p className="text-[8px] text-slate-500 uppercase">{new Date(j.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+        ))}
+        {filteredJobs.length === 0 && searchFilter && (
+          <div className="col-span-full text-center py-12">
+            <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 font-bold text-sm">No se encontraron resultados para "{searchFilter}"</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, workshop }: any) => {
   const [localJob, setLocalJob] = useState<VehicleJob>(job);
@@ -611,6 +699,13 @@ const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, works
   const completedItems = localJob.items?.filter(i => i.status === ItemStatus.COMPLETED).length || 0;
   const progressPercent = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
+  const [folioCopied, setFolioCopied] = useState(false);
+  const copyFolio = () => {
+    navigator.clipboard.writeText(localJob.id);
+    setFolioCopied(true);
+    setTimeout(() => setFolioCopied(false), 2000);
+  };
+
   return (
     <div className="space-y-6 md:space-y-8 animate-in slide-in-from-bottom-6 duration-500">
       <div className="flex justify-between items-center">
@@ -622,6 +717,19 @@ const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, works
       </div>
 
       <div className="bg-white border-2 border-slate-100 p-6 md:p-10 rounded-[30px] md:rounded-[40px] space-y-8 shadow-lg">
+        {/* Folio con botón de copiar */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={copyFolio}
+            className="flex items-center gap-2 bg-blue-50 border-2 border-blue-200 px-4 py-2 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all"
+            title="Copiar folio"
+          >
+            <span className="text-sm md:text-lg font-mono font-black text-blue-600">{localJob.id}</span>
+            {folioCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-blue-500" />}
+          </button>
+          {folioCopied && <span className="text-[10px] font-bold text-green-600 animate-in fade-in">¡Copiado!</span>}
+        </div>
+
         <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
           <div className="max-w-full overflow-hidden">
             <h2 className="text-2xl md:text-5xl font-black uppercase text-slate-800 tracking-tighter leading-tight truncate">{localJob.carModel}</h2>
@@ -629,6 +737,22 @@ const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, works
               <span className="text-sm md:text-xl font-black font-mono text-blue-600">{localJob.plate}</span>
               <span className="text-xs md:text-sm text-slate-500 font-bold uppercase truncate">{localJob.clientName}</span>
             </div>
+            {/* Email del cliente - editable por staff/admin */}
+            {canEdit && (
+              <div className="flex items-center gap-2 mt-3">
+                <Mail className="w-4 h-4 text-slate-400" />
+                <input 
+                  type="email" 
+                  className="bg-slate-50 border-2 border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 outline-none focus:border-blue-500 placeholder:text-slate-400 w-full max-w-xs" 
+                  placeholder="Email del cliente (para acceso)" 
+                  value={localJob.clientEmail || ''} 
+                  onChange={e => setLocalJob(prev => ({ ...prev, clientEmail: e.target.value.toLowerCase().trim() }))} 
+                />
+              </div>
+            )}
+            {!canEdit && localJob.clientEmail && (
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {localJob.clientEmail}</p>
+            )}
           </div>
           {!isReadOnly && (
             <div className="flex flex-col gap-2">
@@ -766,7 +890,7 @@ const JobUpdateView = ({ job, catalog, onUpdate, profile, onBack, onPrint, works
 };
 
 const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
-  const [form, setForm] = useState({ clientName: '', clientPhone: '', carModel: '', plate: '' });
+  const [form, setForm] = useState({ clientName: '', clientPhone: '', clientEmail: '', carModel: '', plate: '' });
   const [selected, setSelected] = useState<string[]>([]);
   const [customItems, setCustomItems] = useState<{name: string, price: number, type: 'SERVICE' | 'PART'}[]>([]);
   const [newCustom, setNewCustom] = useState({ name: '', price: '', type: 'SERVICE' as 'SERVICE' | 'PART' });
@@ -804,7 +928,7 @@ const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
       }));
       const items = [...catalogItems, ...customItemsFormatted];
       const folio = `AW-${Math.floor(10000 + Math.random() * 90000)}`;
-      const jobData = { ...form, id: folio, items, overallStatus: RepairStatus.OPERATIONS, messages: [], createdAt: Date.now(), intakeDate: Date.now(), totalBudget: items.reduce((a:any,b:any)=>a+(b.price || 0), 0) };
+      const jobData = { ...form, id: folio, clientEmail: form.clientEmail.toLowerCase().trim(), items, overallStatus: RepairStatus.OPERATIONS, messages: [], createdAt: Date.now(), intakeDate: Date.now(), totalBudget: items.reduce((a:any,b:any)=>a+(b.price || 0), 0) };
       await addDoc(collection(db, "jobs"), sanitizeData(jobData));
       onCancel();
     } catch (err) { alert("Error al registrar entrada."); } finally { setSaving(false); }
@@ -820,6 +944,7 @@ const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Nombre del Cliente" value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})} />
         <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Teléfono" value={form.clientPhone} onChange={e => setForm({...form, clientPhone: e.target.value})} />
+        <input type="email" className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Email del Cliente (para acceso)" value={form.clientEmail} onChange={e => setForm({...form, clientEmail: e.target.value.toLowerCase()})} />
         <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Marca / Modelo" value={form.carModel} onChange={e => setForm({...form, carModel: e.target.value})} />
         <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl py-4 px-6 text-slate-800 text-sm font-mono uppercase outline-none focus:border-blue-500 placeholder:text-slate-400" placeholder="Placa" value={form.plate} onChange={e => setForm({...form, plate: e.target.value})} />
       </div>
@@ -903,23 +1028,85 @@ const ReceptionView = ({ catalog, onCancel, workshop }: any) => {
   );
 };
 
-const ClientTrackingView = ({ setActiveJob, workshop }: any) => {
+const ClientTrackingView = ({ setActiveJob, workshop, profile }: any) => {
   const [q, setQ] = useState('');
   const [searching, setSearching] = useState(false);
+  const [myJobs, setMyJobs] = useState<VehicleJob[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Cargar historial del cliente logueado
+  useEffect(() => {
+    const loadMyJobs = async () => {
+      if (!profile?.email) return;
+      setLoadingHistory(true);
+      try {
+        const qRef = query(collection(db, "jobs"), where("clientEmail", "==", profile.email.toLowerCase()));
+        const snap = await getDocs(qRef);
+        const jobs = snap.docs.map(d => ({ ...d.data(), id: d.data().id || d.id } as VehicleJob));
+        jobs.sort((a, b) => b.createdAt - a.createdAt);
+        setMyJobs(jobs);
+        if (jobs.length > 0) setShowHistory(true);
+      } catch (err) { console.error(err); } finally { setLoadingHistory(false); }
+    };
+    loadMyJobs();
+  }, [profile?.email]);
 
   const find = async () => {
     if (!q.trim()) return;
     setSearching(true);
     try {
-      const qRef = query(collection(db, "jobs"), where("id", "==", q.trim().toUpperCase()), limit(1));
-      const snap = await getDocs(qRef);
-      if (!snap.empty) setActiveJob({ ...snap.docs[0].data(), id: snap.docs[0].id } as VehicleJob);
-      else alert("Folio no encontrado.");
+      // Buscar por folio
+      let qRef = query(collection(db, "jobs"), where("id", "==", q.trim().toUpperCase()), limit(1));
+      let snap = await getDocs(qRef);
+      if (!snap.empty) {
+        const job = { ...snap.docs[0].data(), id: snap.docs[0].data().id || snap.docs[0].id } as VehicleJob;
+        // Si el cliente está logueado, verificar que es su trabajo
+        if (profile?.role === UserRole.CLIENT && job.clientEmail && job.clientEmail !== profile.email.toLowerCase()) {
+          alert("Este folio no pertenece a su cuenta.");
+          setSearching(false);
+          return;
+        }
+        setActiveJob(job);
+        return;
+      }
+      // Si no es folio, buscar por placa
+      qRef = query(collection(db, "jobs"), where("plate", "==", q.trim().toUpperCase()), limit(5));
+      snap = await getDocs(qRef);
+      if (!snap.empty) {
+        const jobs = snap.docs.map(d => ({ ...d.data(), id: d.data().id || d.id } as VehicleJob));
+        // Filtrar por email si el cliente está logueado
+        const filtered = profile?.role === UserRole.CLIENT && profile?.email 
+          ? jobs.filter(j => j.clientEmail === profile.email.toLowerCase())
+          : jobs;
+        if (filtered.length === 1) {
+          setActiveJob(filtered[0]);
+        } else if (filtered.length > 1) {
+          setMyJobs(filtered);
+          setShowHistory(true);
+        } else {
+          alert("No se encontraron trabajos con esa placa.");
+        }
+        return;
+      }
+      alert("Folio o placa no encontrado.");
     } catch (err) { alert("Error de búsqueda."); } finally { setSearching(false); }
   };
 
+  const copyFolio = async (folio: string) => {
+    try {
+      await navigator.clipboard.writeText(folio);
+    } catch (err) { console.error(err); }
+  };
+
+  const getStatusColor = (status: RepairStatus) => {
+    if (status === RepairStatus.READY) return 'bg-green-100 text-green-700 border-green-300';
+    if (status === RepairStatus.CANCELLED) return 'bg-red-100 text-red-700 border-red-300';
+    return 'bg-blue-100 text-blue-700 border-blue-300';
+  };
+
   return (
-    <div className="max-w-md mx-auto py-8 md:py-24 text-center space-y-10 md:space-y-16 animate-in zoom-in duration-700">
+    <div className="max-w-xl mx-auto py-8 md:py-16 text-center space-y-8 animate-in zoom-in duration-700">
       <div className="flex flex-col items-center">
         <div className="p-5 rounded-3xl mb-6" style={{ backgroundColor: `${workshop.primaryColor}20` }}>
           <Wrench className="w-12 h-12 md:w-16 md:h-16" style={{ color: workshop.primaryColor }} />
@@ -927,12 +1114,58 @@ const ClientTrackingView = ({ setActiveJob, workshop }: any) => {
         <h2 className="text-2xl md:text-5xl font-black text-slate-800 uppercase tracking-tighter leading-none">{workshop.name}</h2>
         <p className="text-slate-500 text-[10px] md:text-sm font-bold mt-3 md:mt-4 uppercase tracking-[3px] md:tracking-[5px]">{workshop.slogan}</p>
       </div>
-      <div className="space-y-6">
-        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-[25px] md:rounded-[40px] py-6 md:py-10 text-xl md:text-4xl text-center font-mono uppercase text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-lg placeholder:text-slate-400" placeholder="INGRESE FOLIO" value={q} onChange={e => setQ(e.target.value)} onKeyPress={e => e.key === 'Enter' && find()} />
-        <button onClick={find} disabled={searching} className="w-full py-6 md:py-8 rounded-[25px] md:rounded-[40px] font-black text-base md:text-2xl text-white uppercase tracking-widest shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3" style={{ backgroundColor: workshop.primaryColor }}>
-          {searching ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Consultar Estatus'}
+      
+      {/* Búsqueda */}
+      <div className="space-y-4">
+        <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-[25px] md:rounded-[40px] py-5 md:py-8 text-lg md:text-3xl text-center font-mono uppercase text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-lg placeholder:text-slate-400" placeholder="FOLIO O PLACA" value={q} onChange={e => setQ(e.target.value)} onKeyPress={e => e.key === 'Enter' && find()} />
+        <button onClick={find} disabled={searching} className="w-full py-5 md:py-6 rounded-[25px] md:rounded-[40px] font-black text-sm md:text-xl text-white uppercase tracking-widest shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3" style={{ backgroundColor: workshop.primaryColor }}>
+          {searching ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Search className="w-5 h-5" /> Consultar Estatus</>}
         </button>
       </div>
+
+      {/* Historial del cliente logueado */}
+      {profile?.email && (
+        <div className="mt-8 border-t-2 border-slate-100 pt-8">
+          <button onClick={() => setShowHistory(!showHistory)} className="flex items-center justify-center gap-2 mx-auto text-slate-600 hover:text-slate-800 transition-colors">
+            <History className="w-5 h-5" />
+            <span className="text-sm font-bold uppercase">Mi Historial ({myJobs.length})</span>
+            {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          
+          {showHistory && (
+            <div className="mt-6 space-y-3 max-h-[400px] overflow-y-auto">
+              {loadingHistory ? (
+                <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>
+              ) : myJobs.length === 0 ? (
+                <p className="text-slate-400 text-sm py-4">No hay trabajos asociados a su cuenta</p>
+              ) : (
+                myJobs.map(job => (
+                  <div key={job.id} onClick={() => setActiveJob(job)} className="bg-white border-2 border-slate-200 rounded-2xl p-4 text-left cursor-pointer hover:border-blue-400 hover:shadow-md transition-all">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-black text-slate-800">{job.id}</span>
+                        <button onClick={(e) => { e.stopPropagation(); copyFolio(job.id); }} className="text-slate-400 hover:text-blue-600" title="Copiar folio"><Copy className="w-3.5 h-3.5" /></button>
+                      </div>
+                      <span className={`text-[9px] font-bold px-2 py-1 rounded-full border ${getStatusColor(job.overallStatus)}`}>
+                        {job.overallStatus === RepairStatus.READY ? 'LISTO' : job.overallStatus === RepairStatus.CANCELLED ? 'CANCELADO' : 'EN PROCESO'}
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold text-slate-700">{job.carModel}</p>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-[10px] text-slate-500 font-mono">{job.plate}</span>
+                      <span className="text-[10px] text-slate-400">{new Date(job.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!profile?.email && (
+        <p className="text-slate-400 text-xs mt-4">Inicie sesión para ver su historial completo</p>
+      )}
     </div>
   );
 };
@@ -1040,6 +1273,7 @@ const InvoicePrintView = ({ job, workshop, onBack }: any) => {
           <p className="text-[7px] font-black uppercase opacity-60 mb-1">CLIENTE</p>
           <p className="text-sm md:text-lg font-black leading-tight break-words">{job.clientName}</p>
           <p className="text-xs font-bold">{job.clientPhone}</p>
+          {job.clientEmail && <p className="text-[9px] font-mono opacity-70">{job.clientEmail}</p>}
         </div>
         <div className="text-right">
           <p className="text-[7px] font-black uppercase opacity-60 mb-1">VEHÍCULO</p>
@@ -1048,7 +1282,12 @@ const InvoicePrintView = ({ job, workshop, onBack }: any) => {
         </div>
       </div>
 
-      {/* Tabla de Servicios + Fotos Dinámicas */}
+      {/* Folio destacado para referencia */}
+      <div className="bg-slate-100 border-2 border-black p-3 mb-6 text-center">
+        <p className="text-[8px] font-black uppercase opacity-60">FOLIO DE SERVICIO</p>
+        <p className="text-2xl font-black font-mono tracking-wide">{job.id}</p>
+        <p className="text-[7px] mt-1 opacity-60">Guarde este folio para consultar el estatus de su vehículo</p>
+      </div>
       <table className="w-full text-left mb-8 border-collapse">
         <thead>
           <tr className="border-b-2 border-black">
@@ -1176,7 +1415,7 @@ const LoginView = ({ workshop }: { workshop: WorkshopSettings }) => {
           </button>
         </form>
         <button onClick={() => setIsLogin(!isLogin)} className="w-full mt-8 text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-blue-600 transition-colors">{isLogin ? '¿No tiene cuenta? Regístrese' : '¿Ya tiene cuenta? Acceda aquí'}</button>
-        <p className="text-center mt-6 text-[10px] text-slate-400 font-mono">v1.2.0</p>
+        <p className="text-center mt-6 text-[10px] text-slate-400 font-mono">v1.3.0</p>
       </div>
     </div>
   );
